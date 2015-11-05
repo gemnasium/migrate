@@ -7,13 +7,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/go-sql-driver/mysql"
-	"github.com/mattes/migrate/driver/registry"
-	"github.com/mattes/migrate/file"
-	"github.com/mattes/migrate/migrate/direction"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/go-sql-driver/mysql"
+	"github.com/mattes/migrate/driver"
+	"github.com/mattes/migrate/file"
+	"github.com/mattes/migrate/migrate/direction"
 )
 
 type Driver struct {
@@ -51,7 +52,7 @@ func (driver *Driver) Close() error {
 }
 
 func (driver *Driver) ensureVersionTableExists() error {
-	_, err := driver.db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (version int not null primary key);")
+	_, err := driver.db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (version bigint not null primary key);")
 
 	if _, isWarn := err.(mysql.MySQLWarnings); err != nil && !isWarn {
 		return err
@@ -166,8 +167,8 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 	}
 }
 
-func (driver *Driver) Version() (uint64, error) {
-	var version uint64
+func (driver *Driver) Version() (file.Version, error) {
+	var version file.Version
 	err := driver.db.QueryRow("SELECT version FROM " + tableName + " ORDER BY version DESC").Scan(&version)
 	switch {
 	case err == sql.ErrNoRows:
@@ -179,6 +180,26 @@ func (driver *Driver) Version() (uint64, error) {
 	}
 }
 
+func (driver *Driver) Versions() (file.Versions, error) {
+	versions := file.Versions{}
+
+	rows, err := driver.db.Query("SELECT version FROM " + tableName + " ORDER BY version DESC")
+	if err != nil {
+		return versions, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var version file.Version
+		err := rows.Scan(&version)
+		if err != nil {
+			return versions, err
+		}
+		versions = append(versions, version)
+	}
+	err = rows.Err()
+	return versions, err
+}
+
 func init() {
-	registry.RegisterDriver("mysql", Driver{})
+	driver.RegisterDriver("mysql", &Driver{})
 }

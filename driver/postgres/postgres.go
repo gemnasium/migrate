@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
+
 	"github.com/lib/pq"
-	"github.com/mattes/migrate/driver/registry"
+	"github.com/mattes/migrate/driver"
 	"github.com/mattes/migrate/file"
 	"github.com/mattes/migrate/migrate/direction"
-	"strconv"
 )
 
 type Driver struct {
@@ -42,7 +43,7 @@ func (driver *Driver) Close() error {
 }
 
 func (driver *Driver) ensureVersionTableExists() error {
-	if _, err := driver.db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (version int not null primary key);"); err != nil {
+	if _, err := driver.db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (version bigint not null primary key);"); err != nil {
 		return err
 	}
 	return nil
@@ -108,8 +109,8 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 	}
 }
 
-func (driver *Driver) Version() (uint64, error) {
-	var version uint64
+func (driver *Driver) Version() (file.Version, error) {
+	var version file.Version
 	err := driver.db.QueryRow("SELECT version FROM " + tableName + " ORDER BY version DESC LIMIT 1").Scan(&version)
 	switch {
 	case err == sql.ErrNoRows:
@@ -121,6 +122,26 @@ func (driver *Driver) Version() (uint64, error) {
 	}
 }
 
+func (driver *Driver) Versions() (file.Versions, error) {
+	versions := file.Versions{}
+
+	rows, err := driver.db.Query("SELECT version FROM " + tableName + " ORDER BY version DESC")
+	if err != nil {
+		return versions, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var version file.Version
+		err := rows.Scan(&version)
+		if err != nil {
+			return versions, err
+		}
+		versions = append(versions, version)
+	}
+	err = rows.Err()
+	return versions, err
+}
+
 func init() {
-	registry.RegisterDriver("postgres", Driver{})
+	driver.RegisterDriver("postgres", &Driver{})
 }

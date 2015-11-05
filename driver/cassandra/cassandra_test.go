@@ -2,6 +2,8 @@ package cassandra
 
 import (
 	"net/url"
+	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -13,7 +15,10 @@ import (
 
 func TestMigrate(t *testing.T) {
 	var session *gocql.Session
-	driverUrl := "cassandra://localhost/migratetest"
+
+	host := os.Getenv("CASSANDRA_PORT_9042_TCP_ADDR")
+	port := os.Getenv("CASSANDRA_PORT_9042_TCP_PORT")
+	driverUrl := "cassandra://" + host + ":" + port + "/system"
 
 	// prepare a clean test database
 	u, err := url.Parse(driverUrl)
@@ -27,17 +32,17 @@ func TestMigrate(t *testing.T) {
 	cluster.Timeout = 1 * time.Minute
 
 	session, err = cluster.CreateSession()
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := session.Query(`DROP TABLE IF EXISTS yolo`).Exec(); err != nil {
+	if err := resetKeySpace(session); err != nil {
 		t.Fatal(err)
 	}
-	if err := session.Query(`DROP TABLE IF EXISTS ` + tableName).Exec(); err != nil {
-		t.Fatal(err)
-	}
+
+	cluster.Keyspace = "migrate"
+	session, err = cluster.CreateSession()
+	driverUrl = "cassandra://" + host + ":" + port + "/migrate"
 
 	d := &Driver{}
 	if err := d.Initialize(driverUrl); err != nil {
@@ -47,8 +52,8 @@ func TestMigrate(t *testing.T) {
 	files := []file.File{
 		{
 			Path:      "/foobar",
-			FileName:  "001_foobar.up.sql",
-			Version:   1,
+			FileName:  "20060102150405_foobar.up.sql",
+			Version:   20060102150405,
 			Name:      "foobar",
 			Direction: direction.Up,
 			Content: []byte(`
@@ -62,8 +67,8 @@ func TestMigrate(t *testing.T) {
 		},
 		{
 			Path:      "/foobar",
-			FileName:  "002_foobar.down.sql",
-			Version:   1,
+			FileName:  "20060102150405_foobar.down.sql",
+			Version:   20060102150405,
 			Name:      "foobar",
 			Direction: direction.Down,
 			Content: []byte(`
@@ -72,8 +77,8 @@ func TestMigrate(t *testing.T) {
 		},
 		{
 			Path:      "/foobar",
-			FileName:  "002_foobar.up.sql",
-			Version:   2,
+			FileName:  "20060102150406_foobar.up.sql",
+			Version:   20060102150406,
 			Name:      "foobar",
 			Direction: direction.Up,
 			Content: []byte(`
@@ -91,6 +96,26 @@ func TestMigrate(t *testing.T) {
 		t.Fatal(errs)
 	}
 
+	version, err := d.Version()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if version != 20060102150405 {
+		t.Errorf("Expected version to be: %d, got: %d", 20060102150405, version)
+	}
+
+	// Check versions applied in DB
+	expectedVersions := file.Versions{20060102150405}
+	versions, err := d.Versions()
+	if err != nil {
+		t.Errorf("Could not fetch versions: %s", err)
+	}
+
+	if !reflect.DeepEqual(versions, expectedVersions) {
+		t.Errorf("Expected versions to be: %v, got: %v", expectedVersions, versions)
+	}
+
 	pipe = pipep.New()
 	go d.Migrate(files[1], pipe)
 	errs = pipep.ReadErrors(pipe)
@@ -105,8 +130,28 @@ func TestMigrate(t *testing.T) {
 		t.Error("Expected test case to fail")
 	}
 
+	// Check versions applied in DB
+	expectedVersions = file.Versions{}
+	versions, err = d.Versions()
+	if err != nil {
+		t.Errorf("Could not fetch versions: %s", err)
+	}
+
+	if !reflect.DeepEqual(versions, expectedVersions) {
+		t.Errorf("Expected versions to be: %v, got: %v", expectedVersions, versions)
+	}
+
+	if err := resetKeySpace(session); err != nil {
+		t.Fatal(err)
+	}
+
 	if err := d.Close(); err != nil {
 		t.Fatal(err)
 	}
 
+}
+
+func resetKeySpace(session *gocql.Session) error {
+	session.Query(`DROP KEYSPACE migrate;`).Exec()
+	return session.Query(`CREATE KEYSPACE IF NOT EXISTS migrate WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1};`).Exec()
 }

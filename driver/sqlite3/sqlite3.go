@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/mattes/migrate/driver/registry"
+	"strings"
+
+	"github.com/mattes/migrate/driver"
 	"github.com/mattes/migrate/file"
 	"github.com/mattes/migrate/migrate/direction"
 	"github.com/mattn/go-sqlite3"
-	"strings"
 )
 
 type Driver struct {
@@ -112,8 +113,8 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 	}
 }
 
-func (driver *Driver) Version() (uint64, error) {
-	var version uint64
+func (driver *Driver) Version() (file.Version, error) {
+	var version file.Version
 	err := driver.db.QueryRow("SELECT version FROM " + tableName + " ORDER BY version DESC LIMIT 1").Scan(&version)
 	switch {
 	case err == sql.ErrNoRows:
@@ -125,6 +126,26 @@ func (driver *Driver) Version() (uint64, error) {
 	}
 }
 
+func (driver *Driver) Versions() (file.Versions, error) {
+	versions := file.Versions{}
+
+	rows, err := driver.db.Query("SELECT version FROM " + tableName + " ORDER BY version DESC")
+	if err != nil {
+		return versions, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var version file.Version
+		err := rows.Scan(&version)
+		if err != nil {
+			return versions, err
+		}
+		versions = append(versions, version)
+	}
+	err = rows.Err()
+	return versions, err
+}
+
 func init() {
-	registry.RegisterDriver("sqlite3", Driver{})
+	driver.RegisterDriver("sqlite3", &Driver{})
 }

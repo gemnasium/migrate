@@ -2,12 +2,9 @@
 package driver
 
 import (
-	"errors"
 	"fmt"
 	neturl "net/url" // alias to allow `url string` func signature in New
-	"reflect"
 
-	"github.com/mattes/migrate/driver/registry"
 	"github.com/mattes/migrate/file"
 )
 
@@ -34,7 +31,10 @@ type Driver interface {
 	Migrate(file file.File, pipe chan interface{})
 
 	// Version returns the current migration version.
-	Version() (uint64, error)
+	Version() (file.Version, error)
+
+	// Versions returns the list of applied migrations
+	Versions() (file.Versions, error)
 }
 
 // New returns Driver and calls Initialize on it
@@ -44,23 +44,16 @@ func New(url string) (Driver, error) {
 		return nil, err
 	}
 
-	driver := registry.GetDriver(u.Scheme)
-	if driver != nil {
-		blankDriver := reflect.New(reflect.TypeOf(driver)).Interface()
-		d, ok := blankDriver.(Driver)
-		if !ok {
-			err := errors.New(fmt.Sprintf("Driver '%s' does not implement the Driver interface"))
-			return nil, err
-		}
-		verifyFilenameExtension(u.Scheme, d)
-		if err := d.Initialize(url); err != nil {
-			return nil, err
-		}
-
-		return d, nil
-	} else {
-		return nil, errors.New(fmt.Sprintf("Driver '%s' not found.", u.Scheme))
+	d := GetDriver(u.Scheme)
+	if d == nil {
+		return nil, fmt.Errorf("Driver '%s' not found.", u.Scheme)
 	}
+	verifyFilenameExtension(u.Scheme, d)
+	if err := d.Initialize(url); err != nil {
+		return nil, err
+	}
+
+	return d, nil
 }
 
 // verifyFilenameExtension panics if the driver's filename extension
