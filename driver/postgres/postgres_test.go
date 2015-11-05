@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/mattes/migrate/file"
-	"github.com/mattes/migrate/migrate/direction"
-	pipep "github.com/mattes/migrate/pipe"
+	"github.com/gemnasium/migrate/file"
+	"github.com/gemnasium/migrate/migrate/direction"
+	pipep "github.com/gemnasium/migrate/pipe"
 )
 
 // TestMigrate runs some additional tests on Migrate().

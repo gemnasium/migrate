@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mattes/migrate/migrate/direction"
+	"github.com/gemnasium/migrate/migrate/direction"
 )
 
 var filenameRegex = `^([0-9]+)_(.*)\.(up|down)\.%s$`
@@ -319,8 +319,8 @@ func LineColumnFromOffset(data []byte, offset int) (line, column int) {
 // LinesBeforeAndAfter reads n lines before and after a given line.
 // Set lineNumbers to true, to prepend line numbers.
 func LinesBeforeAndAfter(data []byte, line, before, after int, lineNumbers bool) []byte {
-	// TODO(mattes): Trim empty lines at the beginning and at the end
-	// TODO(mattes): Trim offset whitespace at the beginning of each line, so that indentation is preserved
+	// TODO(gemnasium): Trim empty lines at the beginning and at the end
+	// TODO(gemnasium): Trim offset whitespace at the beginning of each line, so that indentation is preserved
 	startLine := line - before
 	endLine := line + after
 	lines := bytes.SplitN(data, []byte("\n"), endLine+1)
