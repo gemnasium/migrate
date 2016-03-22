@@ -30,6 +30,7 @@ func TestMigrate(t *testing.T) {
 	cluster.Keyspace = u.Path[1:len(u.Path)]
 	cluster.Consistency = gocql.All
 	cluster.Timeout = 1 * time.Minute
+	cluster.ProtoVersion = 4
 
 	session, err = cluster.CreateSession()
 	if err != nil {
