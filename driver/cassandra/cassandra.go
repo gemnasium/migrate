@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,10 +24,10 @@ const (
 )
 
 // Cassandra Driver URL format:
-// cassandra://host:port/keyspace
+// cassandra://host:port/keyspace?protocol=version
 //
 // Example:
-// cassandra://localhost/SpaceOfKeys
+// cassandra://localhost/SpaceOfKeys?protocol=4
 func (driver *Driver) Initialize(rawurl string) error {
 	u, err := url.Parse(rawurl)
 
@@ -34,6 +35,15 @@ func (driver *Driver) Initialize(rawurl string) error {
 	cluster.Keyspace = u.Path[1:len(u.Path)]
 	cluster.Consistency = gocql.All
 	cluster.Timeout = 1 * time.Minute
+
+	if len(u.Query().Get("protocol")) > 0 {
+		protoversion, err := strconv.Atoi(u.Query().Get("protocol"))
+		if err != nil {
+			return err
+		}
+
+		cluster.ProtoVersion = protoversion
+	}
 
 	// Check if url user struct is null
 	if u.User != nil {
