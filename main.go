@@ -153,7 +153,8 @@ func main() {
 		fmt.Println(version)
 
 	default:
-		fallthrough
+		helpCmd()
+		os.Exit(1)
 	case "help":
 		helpCmd()
 	}
