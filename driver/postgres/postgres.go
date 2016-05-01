@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/lib/pq"
 	"github.com/gemnasium/migrate/driver"
 	"github.com/gemnasium/migrate/file"
 	"github.com/gemnasium/migrate/migrate/direction"
+	"github.com/lib/pq"
 )
 
 type Driver struct {
@@ -46,7 +46,16 @@ func (driver *Driver) ensureVersionTableExists() error {
 	if _, err := driver.db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (version bigint not null primary key);"); err != nil {
 		return err
 	}
-	return nil
+	r := driver.db.QueryRow("SELECT data_type FROM information_schema.columns where table_name = $1 and column_name = 'version'", tableName)
+	dataType := ""
+	if err := r.Scan(&dataType); err != nil {
+		return err
+	}
+	if dataType != "integer" {
+		return nil
+	}
+	_, err := driver.db.Exec("ALTER TABLE " + tableName + " ALTER COLUMN version TYPE bigint")
+	return err
 }
 
 func (driver *Driver) FilenameExtension() string {
