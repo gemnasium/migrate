@@ -25,15 +25,11 @@ func TestMigrate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := connection.Exec(`DROP TABLE IF EXISTS yolo, yolo1, ` + tableName); err != nil {
-		t.Fatal(err)
-	}
+	dropTestTables(t, connection)
 
 	migrate(t, driverUrl)
 
-	if _, err := connection.Exec(`DROP TABLE IF EXISTS yolo, yolo1, ` + tableName); err != nil {
-		t.Fatal(err)
-	}
+	dropTestTables(t, connection)
 
 	// Make an old-style 32-bit int version column that we'll have to upgrade.
 	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (version int not null primary key);")
@@ -142,6 +138,12 @@ func migrate(t *testing.T, driverUrl string) {
 	}
 
 	if err := d.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func dropTestTables(t *testing.T, db *sql.DB) {
+	if _, err := db.Exec(`DROP TABLE IF EXISTS yolo, yolo1, ` + tableName); err != nil {
 		t.Fatal(err)
 	}
 }
