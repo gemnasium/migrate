@@ -25,10 +25,22 @@ func TestMigrate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if _, err := connection.Exec(`DROP TABLE IF EXISTS yolo, yolo1, ` + tableName); err != nil {
+	dropTestTables(t, connection)
+
+	migrate(t, driverUrl)
+
+	dropTestTables(t, connection)
+
+	// Make an old-style 32-bit int version column that we'll have to upgrade.
+	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (version int not null primary key);")
+	if err != nil {
 		t.Fatal(err)
 	}
 
+	migrate(t, driverUrl)
+}
+
+func migrate(t *testing.T, driverUrl string) {
 	d := &Driver{}
 	if err := d.Initialize(driverUrl); err != nil {
 		t.Fatal(err)
@@ -63,8 +75,8 @@ func TestMigrate(t *testing.T) {
 		},
 		{
 			Path:      "/foobar",
-			FileName:  "20060102150405_foobar.up.sql",
-			Version:   20060102150405,
+			FileName:  "20070000000000_foobar.up.sql",
+			Version:   20070000000000,
 			Name:      "foobar",
 			Direction: direction.Up,
 			Content: []byte(`
@@ -126,6 +138,12 @@ func TestMigrate(t *testing.T) {
 	}
 
 	if err := d.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func dropTestTables(t *testing.T, db *sql.DB) {
+	if _, err := db.Exec(`DROP TABLE IF EXISTS yolo, yolo1, ` + tableName); err != nil {
 		t.Fatal(err)
 	}
 }
