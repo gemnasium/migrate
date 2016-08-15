@@ -1,5 +1,9 @@
 # Migrate Changelog
 
+## v1.3.1 - unreleased
+
+* Mongodb support (credits: @dimag-jfrog)
+
 ## v1.3.0 - 2016-08-15
 
 * Initial changelog release
