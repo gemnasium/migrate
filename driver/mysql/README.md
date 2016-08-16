@@ -19,6 +19,14 @@ migrate help # for more info
 
 See full [DSN (Data Source Name) documentation](https://github.com/go-sql-driver/mysql/#dsn-data-source-name).
 
+### SSL
+
+The MySQL driver will set a TLS config if the following env variables are set:
+
+- `MYSQL_SERVER_CA`
+- `MYSQL_CLIENT_KEY`
+- `MYSQL_CLIENT_CERT`
+
 ## Authors
 
 * Matthias Kadenbach, https://github.com/gemnasium
