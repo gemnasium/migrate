@@ -79,7 +79,7 @@ See GoDoc here: http://godoc.org/github.com/gemnasium/migrate/migrate
 import "github.com/gemnasium/migrate/migrate"
 
 // Import any required drivers so that they are registered and available
-import _ "github.com/gemnasium/migrate/drivers/mysql"
+import _ "github.com/gemnasium/migrate/driver/mysql"
 
 // use synchronous versions of migration functions ...
 allErrors, ok := migrate.UpSync("driver://url", "./path")
