@@ -33,6 +33,9 @@ func Up(pipe chan interface{}, url, migrationsPath string) {
 		}
 		go pipep.Close(pipe, nil)
 	}()
+	if err != nil {
+		return
+	}
 
 	applyMigrationFiles, err := files.Pending(versions)
 	if err != nil {
