@@ -1,8 +1,12 @@
 # Migrate Changelog
 
+## v1.4.0 - 2016-10-01
+
+* Add Apache Phoenix driver.
+
 ## v1.3.1 - 2016-08-16
 
-* make mysql driver aware of SSL certificates for TLS connection by scanning ENV variables (https://github.com/mattes/migrate/pull/117/files)
+* Make mysql driver aware of SSL certificates for TLS connection by scanning ENV variables (https://github.com/mattes/migrate/pull/117/files)
 
 ## v1.3.0 - 2016-08-15
 
