@@ -25,6 +25,7 @@ __Features__
  * [Cassandra](https://github.com/gemnasium/migrate/tree/master/driver/cassandra)
  * [SQLite](https://github.com/gemnasium/migrate/tree/master/driver/sqlite3)
  * [MySQL](https://github.com/gemnasium/migrate/tree/master/driver/mysql) ([experimental](https://github.com/mattes/migrate/issues/1#issuecomment-58728186))
+ * [MongoDB](https://github.com/gemnasium/migrate/tree/master/driver/mongodb)
  * Bash (planned)
 
 Need another driver? Just implement the [Driver interface](http://godoc.org/github.com/gemnasium/migrate/driver#Driver) and open a PR.
