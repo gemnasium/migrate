@@ -98,7 +98,7 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 			if isErr {
 				// The sqlite3 library only provides error codes, not position information. Output what we do know.
 				pipe <- fmt.Errorf("SQLite Error (%s); Extended (%s)\nError: %s",
-					sqliteErr.Code.Error(), sqliteErr.ExtendedCode.Error(), sqliteErr.Error()))
+					sqliteErr.Code.Error(), sqliteErr.ExtendedCode.Error(), sqliteErr.Error())
 			} else {
 				pipe <- fmt.Errorf("An error occurred when running query [%q]: %v", query, err)
 			}
