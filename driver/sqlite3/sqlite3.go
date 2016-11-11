@@ -10,7 +10,7 @@ import (
 	"github.com/gemnasium/migrate/driver"
 	"github.com/gemnasium/migrate/file"
 	"github.com/gemnasium/migrate/migrate/direction"
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/mattn/go-sqlite3"
 )
 
 type Driver struct {
