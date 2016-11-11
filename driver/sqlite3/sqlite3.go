@@ -10,7 +10,7 @@ import (
 	"github.com/gemnasium/migrate/driver"
 	"github.com/gemnasium/migrate/file"
 	"github.com/gemnasium/migrate/migrate/direction"
-	"github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Driver struct {
@@ -94,7 +94,14 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 	queries := splitStatements(string(f.Content))
 	for _, query := range queries {
 		if _, err := tx.Exec(query); err != nil {
-			pipe <- fmt.Errorf("An error occurred when running query [%q]: %v", query, err)
+			sqliteErr, isErr := err.(sqlite3.Error)
+			if isErr {
+				// The sqlite3 library only provides error codes, not position information. Output what we do know.
+				pipe <- fmt.Errorf("SQLite Error (%s); Extended (%s)\nError: %s",
+					sqliteErr.Code.Error(), sqliteErr.ExtendedCode.Error(), sqliteErr.Error()))
+			} else {
+				pipe <- fmt.Errorf("An error occurred when running query [%q]: %v", query, err)
+			}
 			if err := tx.Rollback(); err != nil {
 				pipe <- err
 			}

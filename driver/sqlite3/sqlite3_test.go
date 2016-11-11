@@ -105,7 +105,7 @@ func TestMigrate(t *testing.T) {
 		t.Fatal(errs)
 	}
 	if _, err := d.db.Query("SELECT id, data1, data2 FROM yolo"); err != nil {
-		t.Errorf("Sequental migration failed: %v", err)
+		t.Errorf("Sequential migration failed: %v", err)
 	}
 
 	// Check versions applied in DB.
@@ -116,10 +116,6 @@ func TestMigrate(t *testing.T) {
 	}
 	if !reflect.DeepEqual(versions, expectedVersions) {
 		t.Errorf("Expected versions to be: %v, got: %v", expectedVersions, versions)
-	}
-
-	if _, err := d.db.Query("SELECT * FROM schema_migration"); err != nil {
-		t.Errorf("F: %v", err)
 	}
 
 	pipe = pipep.New()
