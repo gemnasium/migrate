@@ -1,5 +1,9 @@
 # Migrate Changelog
 
+## v1.3.2 - 2016-11-11
+
+* [sqlite] Allow multiple statements per migration (dklimkin / #11)
+
 ## v1.3.1 - 2016-08-16
 
 * make mysql driver aware of SSL certificates for TLS connection by scanning ENV variables (https://github.com/mattes/migrate/pull/117/files)
