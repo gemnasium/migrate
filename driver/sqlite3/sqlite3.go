@@ -91,20 +91,15 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 		return
 	}
 
-	if _, err := tx.Exec(string(f.Content)); err != nil {
-		sqliteErr, isErr := err.(sqlite3.Error)
-
-		if isErr {
-			// The sqlite3 library only provides error codes, not position information. Output what we do know
-			pipe <- errors.New(fmt.Sprintf("SQLite Error (%s); Extended (%s)\nError: %s", sqliteErr.Code.Error(), sqliteErr.ExtendedCode.Error(), sqliteErr.Error()))
-		} else {
-			pipe <- errors.New(fmt.Sprintf("An error occurred: %s", err.Error()))
+	queries := splitStatements(string(f.Content))
+	for _, query := range queries {
+		if _, err := tx.Exec(query); err != nil {
+			pipe <- fmt.Errorf("An error occurred when running query [%q]: %v", query, err)
+			if err := tx.Rollback(); err != nil {
+				pipe <- err
+			}
+			return
 		}
-
-		if err := tx.Rollback(); err != nil {
-			pipe <- err
-		}
-		return
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -148,4 +143,18 @@ func (driver *Driver) Versions() (file.Versions, error) {
 
 func init() {
 	driver.RegisterDriver("sqlite3", &Driver{})
+}
+
+// This naive implementation doesn't account for quoted ";" inside statements.
+// It should work for most migrations but can be improved in the future.
+func splitStatements(in string) []string {
+	result := make([]string, 0)
+
+	qs := strings.Split(in, ";")
+	for _, q := range qs {
+		if q = strings.TrimSpace(q); q != "" {
+			result = append(result, q + ";")
+		}
+	}
+	return result
 }
