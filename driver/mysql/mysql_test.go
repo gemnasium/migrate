@@ -17,17 +17,17 @@ import (
 func TestMigrate(t *testing.T) {
 	host := os.Getenv("MYSQL_PORT_3306_TCP_ADDR")
 	port := os.Getenv("MYSQL_PORT_3306_TCP_PORT")
-	driverUrl := "mysql://root@tcp(" + host + ":" + port + ")/migratetest"
+	driverURL := "mysql://root@tcp(" + host + ":" + port + ")/migratetest"
 
 	// prepare clean database
-	connection, err := sql.Open("mysql", strings.SplitN(driverUrl, "mysql://", 2)[1])
+	connection, err := sql.Open("mysql", strings.SplitN(driverURL, "mysql://", 2)[1])
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	dropTestTables(t, connection)
 
-	migrate(t, driverUrl)
+	migrate(t, driverURL)
 
 	dropTestTables(t, connection)
 
@@ -37,12 +37,12 @@ func TestMigrate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	migrate(t, driverUrl)
+	migrate(t, driverURL)
 }
 
-func migrate(t *testing.T, driverUrl string) {
+func migrate(t *testing.T, driverURL string) {
 	d := &Driver{}
-	if err := d.Initialize(driverUrl); err != nil {
+	if err := d.Initialize(driverURL); err != nil {
 		t.Fatal(err)
 	}
 

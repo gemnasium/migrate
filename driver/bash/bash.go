@@ -27,10 +27,12 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 	return
 }
 
+// Version returns the current migration version.
 func (driver *Driver) Version() (file.Version, error) {
 	return file.Version(0), nil
 }
 
+// Versions returns the list of applied migrations.
 func (driver *Driver) Versions() (file.Versions, error) {
 	return file.Versions{0}, nil
 }

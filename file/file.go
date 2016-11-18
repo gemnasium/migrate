@@ -24,9 +24,10 @@ func FilenameRegex(filenameExtension string) *regexp.Regexp {
 	return regexp.MustCompile(fmt.Sprintf(filenameRegex, filenameExtension))
 }
 
-type Version uint64
-type Versions []Version
+type Version uint64     // Version is the migration version.
+type Versions []Version // Versions is the list of migrations.
 
+// Contains checks if a _version_ is contained in the list of migrations.
 func (versions Versions) Contains(version Version) bool {
 	for _, v := range versions {
 		if v == version {
@@ -38,21 +39,19 @@ func (versions Versions) Contains(version Version) bool {
 
 // Len is the number of elements in the collection.
 // Required by Sort Interface{}
-func (v Versions) Len() int {
-	return len(v)
+func (versions Versions) Len() int {
+	return len(versions)
 }
 
-// Less reports whether the element with
-// index i should sort before the element with index j.
-// Required by Sort Interface{}
-func (v Versions) Less(i, j int) bool {
-	return v[i] < v[j]
+// Less reports whether the element with index i should sort before the element
+// with index j. Required by Sort Interface{}.
+func (versions Versions) Less(i, j int) bool {
+	return versions[i] < versions[j]
 }
 
-// Swap swaps the elements with indexes i and j.
-// Required by Sort Interface{}
-func (v Versions) Swap(i, j int) {
-	v[i], v[j] = v[j], v[i]
+// Swap swaps the elements with indexes i and j. Required by Sort Interface{}.
+func (versions Versions) Swap(i, j int) {
+	versions[i], versions[j] = versions[j], versions[i]
 }
 
 // File represents one file on disk.
@@ -77,7 +76,7 @@ type File struct {
 	Direction direction.Direction
 }
 
-// Files is a slice of Files
+// Files is a slice of Files.
 type Files []File
 
 // MigrationFile represents both the UP and the DOWN migration file.
@@ -92,10 +91,10 @@ type MigrationFile struct {
 	DownFile *File
 }
 
-// MigrationFiles is a slice of MigrationFiles
+// MigrationFiles is a slice of MigrationFiles.
 type MigrationFiles []MigrationFile
 
-// ReadContent reads the file's content if the content is empty
+// ReadContent reads the file into the content if it's empty.
 func (f *File) ReadContent() error {
 	if len(f.Content) == 0 {
 		content, err := ioutil.ReadFile(path.Join(f.Path, f.FileName))
@@ -107,6 +106,7 @@ func (f *File) ReadContent() error {
 	return nil
 }
 
+// Pending returns the list of pending migration files.
 func (mf *MigrationFiles) Pending(versions Versions) (Files, error) {
 	sort.Sort(mf)
 	files := make(Files, 0)
@@ -118,6 +118,7 @@ func (mf *MigrationFiles) Pending(versions Versions) (Files, error) {
 	return files, nil
 }
 
+// Applied returns the list of applied migration files.
 func (mf *MigrationFiles) Applied(versions Versions) (Files, error) {
 	sort.Sort(sort.Reverse(mf))
 	files := make(Files, 0)
@@ -161,9 +162,9 @@ func (mf *MigrationFiles) Relative(relativeN int, versions Versions) (Files, err
 	return files[:relativeN], err
 }
 
-// ReadMigrationFiles reads all migration files from a given path
+// ReadMigrationFiles reads all migration files from a given path.
 func ReadMigrationFiles(path string, filenameRegex *regexp.Regexp) (files MigrationFiles, err error) {
-	// find all migration files in path
+	// find all migration files in path.
 	ioFiles, err := ioutil.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -192,7 +193,7 @@ func ReadMigrationFiles(path string, filenameRegex *regexp.Regexp) (files Migrat
 		}
 	}
 
-	// put tmpFiles into MigrationFile struct
+	// put tmpFiles into MigrationFile struct.
 	parsedVersions := make(map[Version]bool)
 	newFiles := make(MigrationFiles, 0)
 	for _, file := range tmpFiles {
@@ -262,7 +263,7 @@ func ReadMigrationFiles(path string, filenameRegex *regexp.Regexp) (files Migrat
 	return newFiles, nil
 }
 
-// parseFilenameSchema parses the filename
+// parseFilenameSchema parses the filename.
 func parseFilenameSchema(filename string, filenameRegex *regexp.Regexp) (version Version, name string, d direction.Direction, err error) {
 	matches := filenameRegex.FindStringSubmatch(filename)
 	if len(matches) != 4 {
@@ -286,27 +287,23 @@ func parseFilenameSchema(filename string, filenameRegex *regexp.Regexp) (version
 	return version, matches[2], d, nil
 }
 
-// Len is the number of elements in the collection.
-// Required by Sort Interface{}
+// Len is the number of elements in the collection. Required by Sort Interface{}.
 func (mf MigrationFiles) Len() int {
 	return len(mf)
 }
 
-// Less reports whether the element with
-// index i should sort before the element with index j.
-// Required by Sort Interface{}
+// Less reports whether the element with index i should sort before the element
+// with index j. Required by Sort Interface{}.
 func (mf MigrationFiles) Less(i, j int) bool {
 	return mf[i].Version < mf[j].Version
 }
 
-// Swap swaps the elements with indexes i and j.
-// Required by Sort Interface{}
+// Swap swaps the elements with indexes i and j. Required by Sort Interface{}.
 func (mf MigrationFiles) Swap(i, j int) {
 	mf[i], mf[j] = mf[j], mf[i]
 }
 
-// LineColumnFromOffset reads data and returns line and column integer
-// for a given offset.
+// LineColumnFromOffset reads data and returns line and column integer for a given offset.
 func LineColumnFromOffset(data []byte, offset int) (line, column int) {
 	// TODO is there a better way?
 	fs := token.NewFileSet()

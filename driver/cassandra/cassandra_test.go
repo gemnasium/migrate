@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gocql/gocql"
 	"github.com/gemnasium/migrate/file"
 	"github.com/gemnasium/migrate/migrate/direction"
 	pipep "github.com/gemnasium/migrate/pipe"
+	"github.com/gocql/gocql"
 )
 
 func TestMigrate(t *testing.T) {
@@ -18,10 +18,10 @@ func TestMigrate(t *testing.T) {
 
 	host := os.Getenv("CASSANDRA_PORT_9042_TCP_ADDR")
 	port := os.Getenv("CASSANDRA_PORT_9042_TCP_PORT")
-	driverUrl := "cassandra://" + host + ":" + port + "/system?protocol=4"
+	driverURL := "cassandra://" + host + ":" + port + "/system?protocol=4"
 
-	// prepare a clean test database
-	u, err := url.Parse(driverUrl)
+	// prepare a clean test database.
+	u, err := url.Parse(driverURL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,10 +43,10 @@ func TestMigrate(t *testing.T) {
 
 	cluster.Keyspace = "migrate"
 	session, err = cluster.CreateSession()
-	driverUrl = "cassandra://" + host + ":" + port + "/migrate?protocol=4"
+	driverURL = "cassandra://" + host + ":" + port + "/migrate?protocol=4"
 
 	d := &Driver{}
-	if err := d.Initialize(driverUrl); err != nil {
+	if err := d.Initialize(driverURL); err != nil {
 		t.Fatal(err)
 	}
 
@@ -106,7 +106,7 @@ func TestMigrate(t *testing.T) {
 		t.Errorf("Expected version to be: %d, got: %d", 20060102150405, version)
 	}
 
-	// Check versions applied in DB
+	// Check versions applied in DB.
 	expectedVersions := file.Versions{20060102150405}
 	versions, err := d.Versions()
 	if err != nil {
@@ -131,7 +131,7 @@ func TestMigrate(t *testing.T) {
 		t.Error("Expected test case to fail")
 	}
 
-	// Check versions applied in DB
+	// Check versions applied in DB.
 	expectedVersions = file.Versions{}
 	versions, err = d.Versions()
 	if err != nil {
