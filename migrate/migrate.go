@@ -18,7 +18,7 @@ import (
 	pipep "github.com/gemnasium/migrate/pipe"
 )
 
-// Up applies all available migrations
+// Up applies all available migrations.
 func Up(pipe chan interface{}, url, migrationsPath string) {
 	d, files, versions, err := initDriverAndReadMigrationFilesAndGetVersions(url, migrationsPath)
 	defer func() {
@@ -53,7 +53,7 @@ func Up(pipe chan interface{}, url, migrationsPath string) {
 	}
 }
 
-// UpSync is synchronous version of Up
+// UpSync is synchronous version of Up().
 func UpSync(url, migrationsPath string) (err []error, ok bool) {
 	pipe := pipep.New()
 	go Up(pipe, url, migrationsPath)
@@ -61,7 +61,7 @@ func UpSync(url, migrationsPath string) (err []error, ok bool) {
 	return err, len(err) == 0
 }
 
-// Down rolls back all migrations
+// Down rolls back all migrations.
 func Down(pipe chan interface{}, url, migrationsPath string) {
 	d, files, versions, err := initDriverAndReadMigrationFilesAndGetVersions(url, migrationsPath)
 	defer func() {
@@ -96,7 +96,7 @@ func Down(pipe chan interface{}, url, migrationsPath string) {
 	}
 }
 
-// DownSync is synchronous version of Down
+// DownSync is synchronous version of Down().
 func DownSync(url, migrationsPath string) (err []error, ok bool) {
 	pipe := pipep.New()
 	go Down(pipe, url, migrationsPath)
@@ -115,7 +115,7 @@ func Redo(pipe chan interface{}, url, migrationsPath string) {
 	go Migrate(pipe, url, migrationsPath, +1)
 }
 
-// RedoSync is synchronous version of Redo
+// RedoSync is synchronous version of Redo().
 func RedoSync(url, migrationsPath string) (err []error, ok bool) {
 	pipe := pipep.New()
 	go Redo(pipe, url, migrationsPath)
@@ -123,7 +123,7 @@ func RedoSync(url, migrationsPath string) (err []error, ok bool) {
 	return err, len(err) == 0
 }
 
-// Reset runs the down and up migration function
+// Reset runs the down and up migration function.
 func Reset(pipe chan interface{}, url, migrationsPath string) {
 	pipe1 := pipep.New()
 	go Down(pipe1, url, migrationsPath)
@@ -134,7 +134,7 @@ func Reset(pipe chan interface{}, url, migrationsPath string) {
 	go Up(pipe, url, migrationsPath)
 }
 
-// ResetSync is synchronous version of Reset
+// ResetSync is synchronous version of Reset().
 func ResetSync(url, migrationsPath string) (err []error, ok bool) {
 	pipe := pipep.New()
 	go Reset(pipe, url, migrationsPath)
@@ -142,7 +142,7 @@ func ResetSync(url, migrationsPath string) (err []error, ok bool) {
 	return err, len(err) == 0
 }
 
-// Migrate applies relative +n/-n migrations
+// Migrate applies relative +n/-n migrations.
 func Migrate(pipe chan interface{}, url, migrationsPath string, relativeN int) {
 	d, files, versions, err := initDriverAndReadMigrationFilesAndGetVersions(url, migrationsPath)
 	defer func() {
@@ -176,7 +176,7 @@ func Migrate(pipe chan interface{}, url, migrationsPath string, relativeN int) {
 	}
 }
 
-// MigrateSync is synchronous version of Migrate
+// MigrateSync is synchronous version of Migrate().
 func MigrateSync(url, migrationsPath string, relativeN int) (err []error, ok bool) {
 	pipe := pipep.New()
 	go Migrate(pipe, url, migrationsPath, relativeN)
@@ -184,7 +184,7 @@ func MigrateSync(url, migrationsPath string, relativeN int) (err []error, ok boo
 	return err, len(err) == 0
 }
 
-// Version returns the current migration version
+// Version returns the current migration version.
 func Version(url, migrationsPath string) (version file.Version, err error) {
 	d, err := driver.New(url)
 	if err != nil {
@@ -193,7 +193,7 @@ func Version(url, migrationsPath string) (version file.Version, err error) {
 	return d.Version()
 }
 
-// Version returns applied versions
+// Versions returns applied versions.
 func Versions(url, migrationsPath string) (versions file.Versions, err error) {
 	d, err := driver.New(url)
 	if err != nil {
@@ -202,7 +202,7 @@ func Versions(url, migrationsPath string) (versions file.Versions, err error) {
 	return d.Versions()
 }
 
-// Create creates new migration files on disk
+// Create creates new migration files on disk.
 func Create(url, migrationsPath, name string) (*file.MigrationFile, error) {
 	d, files, _, err := initDriverAndReadMigrationFilesAndGetVersions(url, migrationsPath)
 	if err != nil {
@@ -253,7 +253,7 @@ func Create(url, migrationsPath, name string) (*file.MigrationFile, error) {
 }
 
 // initDriverAndReadMigrationFilesAndGetVersionsAndGetVersion is a small helper
-// function that is common to most of the migration funcs
+// function that is common to most of the migration funcs.
 func initDriverAndReadMigrationFilesAndGetVersions(url, migrationsPath string) (driver.Driver, file.MigrationFiles, file.Versions, error) {
 	d, err := driver.New(url)
 	if err != nil {
@@ -282,7 +282,7 @@ func NewPipe() chan interface{} {
 }
 
 // interrupts is an internal variable that holds the state of
-// interrupt handling
+// interrupt handling.
 var interrupts = true
 
 // Graceful enables interrupts checking. Once the first ^C is received

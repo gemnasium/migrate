@@ -115,6 +115,7 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 	}
 }
 
+// Version returns the current migration version.
 func (driver *Driver) Version() (file.Version, error) {
 	var version file.Version
 	err := driver.db.QueryRow("SELECT version FROM " + tableName + " ORDER BY version DESC LIMIT 1").Scan(&version)
@@ -128,6 +129,7 @@ func (driver *Driver) Version() (file.Version, error) {
 	}
 }
 
+// Versions returns the list of applied migrations.
 func (driver *Driver) Versions() (file.Versions, error) {
 	versions := file.Versions{}
 
@@ -160,7 +162,7 @@ func splitStatements(in string) []string {
 	qs := strings.Split(in, ";")
 	for _, q := range qs {
 		if q = strings.TrimSpace(q); q != "" {
-			result = append(result, q + ";")
+			result = append(result, q+";")
 		}
 	}
 	return result

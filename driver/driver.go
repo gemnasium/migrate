@@ -33,11 +33,11 @@ type Driver interface {
 	// Version returns the current migration version.
 	Version() (file.Version, error)
 
-	// Versions returns the list of applied migrations
+	// Versions returns the list of applied migrations.
 	Versions() (file.Versions, error)
 }
 
-// New returns Driver and calls Initialize on it
+// New returns Driver and calls Initialize on it.
 func New(url string) (Driver, error) {
 	u, err := neturl.Parse(url)
 	if err != nil {

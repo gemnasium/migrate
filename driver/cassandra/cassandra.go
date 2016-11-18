@@ -138,6 +138,7 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 	}
 }
 
+// Version returns the current migration version.
 func (driver *Driver) Version() (file.Version, error) {
 	versions, err := driver.Versions()
 	if len(versions) == 0 {
@@ -146,6 +147,7 @@ func (driver *Driver) Version() (file.Version, error) {
 	return versions[0], err
 }
 
+// Versions returns the list of applied migrations.
 func (driver *Driver) Versions() (file.Versions, error) {
 	versions := file.Versions{}
 	iter := driver.session.Query("SELECT version FROM " + tableName).Iter()
