@@ -131,7 +131,7 @@ func splitContent(content string) []string {
 }
 
 func (driver *Driver) ensureVersionTableExists() error {
-	if _, err := driver.db.Exec(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (version INTEGER PRIMARY KEY)", tableName)); err != nil {
+	if _, err := driver.db.Exec(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (version LONG PRIMARY KEY)", tableName)); err != nil {
 		return err
 	}
 	return nil

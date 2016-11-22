@@ -49,8 +49,8 @@ func TestMigrate(t *testing.T) {
 	successFiles := []file.File{
 		{
 			Path:      "/foobar",
-			FileName:  "001_foobar.up.sql",
-			Version:   1,
+			FileName:  "20161122192905_foobar.up.sql",
+			Version:   20161122192905,
 			Name:      "foobar",
 			Direction: direction.Up,
 			Content: []byte(`
@@ -62,8 +62,8 @@ func TestMigrate(t *testing.T) {
 		},
 		{
 			Path:      "/foobar",
-			FileName:  "002_foobar.down.sql",
-			Version:   1,
+			FileName:  "20161122192905_foobar.down.sql",
+			Version:   20161122192905,
 			Name:      "foobar",
 			Direction: direction.Down,
 			Content: []byte(`
@@ -75,8 +75,8 @@ func TestMigrate(t *testing.T) {
 	failFiles := []file.File{
 		{
 			Path:      "/foobar",
-			FileName:  "002_foobar.up.sql",
-			Version:   2,
+			FileName:  "20161122193005_foobar.up.sql",
+			Version:   20161122193005,
 			Name:      "foobar",
 			Direction: direction.Up,
 			Content: []byte(`
