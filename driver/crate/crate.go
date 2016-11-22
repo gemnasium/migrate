@@ -28,6 +28,7 @@ func (driver *Driver) Initialize(url string) error {
 	if err != nil {
 		return err
 	}
+
 	if err := db.Ping(); err != nil {
 		return err
 	}
@@ -50,8 +51,9 @@ func (driver *Driver) FilenameExtension() string {
 	return "sql"
 }
 
-func (driver *Driver) Version() (uint64, error) {
-	var version uint64
+// Version returns the current migration version.
+func (driver *Driver) Version() (file.Version, error) {
+	var version file.Version
 	err := driver.db.QueryRow("SELECT version FROM " + tableName + " ORDER BY version DESC LIMIT 1").Scan(&version)
 	switch {
 	case err == sql.ErrNoRows:
@@ -61,6 +63,27 @@ func (driver *Driver) Version() (uint64, error) {
 	default:
 		return version, nil
 	}
+}
+
+// Versions returns the list of applied migrations.
+func (driver *Driver) Versions() (file.Versions, error) {
+	versions := file.Versions{}
+
+	rows, err := driver.db.Query("SELECT version FROM " + tableName + " ORDER BY version DESC")
+	if err != nil {
+		return versions, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var version file.Version
+		err := rows.Scan(&version)
+		if err != nil {
+			return versions, err
+		}
+		versions = append(versions, version)
+	}
+	err = rows.Err()
+	return versions, err
 }
 
 func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
