@@ -1,5 +1,9 @@
 # Migrate Changelog
 
+## v1.4.0 - 2016-11-22
+
+* [crate] Add Crate](https://crate.io) database support, based on the Crate sql driver by [herenow](https://github.com/herenow/go-crate) (@dereulenspiegel / #16)
+
 ## v1.3.2 - 2016-11-11
 
 * [sqlite] Allow multiple statements per migration (dklimkin / #11)
