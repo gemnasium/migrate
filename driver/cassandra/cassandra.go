@@ -56,6 +56,10 @@ func (driver *Driver) Initialize(rawurl string) error {
 		cluster.ProtoVersion = protoversion
 	}
 
+	if _, ok := u.Query()["disable_init_host_lookup"]; ok {
+		cluster.DisableInitialHostLookup = true
+	}
+
 	// Check if url user struct is null
 	if u.User != nil {
 		password, passwordSet := u.User.Password()
