@@ -7,16 +7,16 @@ A migration helper written in Go. Use it in your existing Golang code
 or run commands via the CLI. 
 
 ```
-GoCode   import github.com/gemnasium/migrate/migrate
+Go code  import "github.com/gemnasium/migrate/migrate"
 CLI      go get -u github.com/gemnasium/migrate
 ```
 
 __Features__
 
 * Super easy to implement [Driver interface](http://godoc.org/github.com/gemnasium/migrate/driver#Driver).
-* Gracefully quit running migrations on ``^C``.
+* Gracefully quit running migrations on `^C`.
 * No magic search paths routines, no hard-coded config files.
-* CLI is build on top of the ``migrate package``.
+* CLI is build on top of the `migrate` package.
 
 
 ## Available Drivers
@@ -85,7 +85,7 @@ import _ "github.com/gemnasium/migrate/driver/mysql"
 allErrors, ok := migrate.UpSync("driver://url", "./path")
 if !ok {
   fmt.Println("Oh no ...")
-  // do sth with allErrors slice
+  // do something with allErrors slice
 }
 
 // use the asynchronous version of migration functions ...
@@ -107,7 +107,7 @@ The format of migration files looks like this:
 ...
 ```
 
-Why two files? This way you could still do sth like 
+Why two files? This way you could still do something like 
 ``psql -f ./db/migrations/20060102150405_initial_plan_to_do_sth.up.sql`` and there is no
 need for any custom markup language to divide up and down migrations. Please note
 that the filename extension depends on the driver.
