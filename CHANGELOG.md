@@ -1,5 +1,9 @@
 # Migrate Changelog
 
+## v1.4.1 - 2016-12-16
+
+* [cassandra] Add [disable_init_host_lookup](https://github.com/gocql/gocql/blob/master/cluster.go#L92) url param (@GeorgeMac / #17)
+
 ## v1.4.0 - 2016-11-22
 
 * [crate] Add [Crate](https://crate.io) database support, based on the Crate sql driver by [herenow](https://github.com/herenow/go-crate) (@dereulenspiegel / #16)
