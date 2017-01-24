@@ -2,8 +2,8 @@
 
 ### See [issue #1](https://github.com/gemnasium/migrate/issues/1#issuecomment-58728186) before using this driver!
 
-* Runs migrations in transcations.
-  That means that if a migration failes, it will be safely rolled back.
+* Runs migrations in transactions.
+  That means that if a migration fails, it will be safely rolled back.
 * Tries to return helpful error messages.
 * Stores migration version details in table ``schema_migrations``.
   This table will be auto-generated.
