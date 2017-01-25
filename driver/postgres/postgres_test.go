@@ -61,6 +61,10 @@ func migrate(t *testing.T, driverUrl string) {
 				CREATE TABLE yolo (
 					id serial not null primary key
 				);
+				CREATE TYPE colors AS ENUM (
+					'red',
+					'green'
+				);
 			`),
 		},
 		{
@@ -79,6 +83,26 @@ func migrate(t *testing.T, driverUrl string) {
 			Version:   20060102150406,
 			Name:      "foobar",
 			Direction: direction.Up,
+			Content: []byte(`-- disable_ddl_transaction
+				ALTER TYPE colors ADD VALUE 'blue' AFTER 'red';
+			`),
+		},
+		{
+			Path:      "/foobar",
+			FileName:  "20060102150406_foobar.down.sql",
+			Version:   20060102150406,
+			Name:      "foobar",
+			Direction: direction.Down,
+			Content: []byte(`
+				DROP TYPE colors;
+			`),
+		},
+		{
+			Path:      "/foobar",
+			FileName:  "20060102150407_foobar.up.sql",
+			Version:   20060102150407,
+			Name:      "foobar",
+			Direction: direction.Up,
 			Content: []byte(`
 				CREATE TABLE error (
 					id THIS WILL CAUSE AN ERROR
@@ -87,6 +111,7 @@ func migrate(t *testing.T, driverUrl string) {
 		},
 	}
 
+	// should create table yolo
 	pipe := pipep.New()
 	go d.Migrate(files[0], pipe)
 	errs := pipep.ReadErrors(pipe)
@@ -114,6 +139,28 @@ func migrate(t *testing.T, driverUrl string) {
 		t.Errorf("Expected versions to be: %v, got: %v", expectedVersions, versions)
 	}
 
+	// should alter type colors
+	pipe = pipep.New()
+	go d.Migrate(files[2], pipe)
+	errs = pipep.ReadErrors(pipe)
+	if len(errs) > 0 {
+		t.Fatal(errs)
+	}
+
+	colors := []string{}
+	expectedColors := []string{"red", "blue", "green"}
+	d.db.Select(&colors, "SELECT unnest(enum_range(NULL::colors));")
+	if !reflect.DeepEqual(colors, expectedColors) {
+		t.Errorf("Expected colors enum to be %q, got %q\n", expectedColors, colors)
+	}
+
+	pipe = pipep.New()
+	go d.Migrate(files[3], pipe)
+	errs = pipep.ReadErrors(pipe)
+	if len(errs) > 0 {
+		t.Fatal(errs)
+	}
+
 	pipe = pipep.New()
 	go d.Migrate(files[1], pipe)
 	errs = pipep.ReadErrors(pipe)
@@ -122,7 +169,7 @@ func migrate(t *testing.T, driverUrl string) {
 	}
 
 	pipe = pipep.New()
-	go d.Migrate(files[2], pipe)
+	go d.Migrate(files[4], pipe)
 	errs = pipep.ReadErrors(pipe)
 	if len(errs) == 0 {
 		t.Error("Expected test case to fail")
@@ -142,10 +189,12 @@ func migrate(t *testing.T, driverUrl string) {
 	if err := d.Close(); err != nil {
 		t.Fatal(err)
 	}
+
 }
 
 func dropTestTables(t *testing.T, db *sql.DB) {
 	if _, err := db.Exec(`
+				DROP TYPE IF EXISTS colors;
 				DROP TABLE IF EXISTS yolo;
 				DROP TABLE IF EXISTS ` + tableName + `;`); err != nil {
 		t.Fatal(err)

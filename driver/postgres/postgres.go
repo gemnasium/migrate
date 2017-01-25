@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/gemnasium/migrate/driver"
 	"github.com/gemnasium/migrate/file"
@@ -18,6 +19,7 @@ type Driver struct {
 }
 
 const tableName = "schema_migrations"
+const txDisabledOption = "disable_ddl_transaction"
 
 func (driver *Driver) Initialize(url string) error {
 	db, err := sqlx.Open("postgres", url)
@@ -102,7 +104,13 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 		return
 	}
 
-	if _, err := tx.Exec(string(f.Content)); err != nil {
+	if txDisabled(fileOptions(f.Content)) {
+		_, err = driver.db.Exec(string(f.Content))
+	} else {
+		_, err = tx.Exec(string(f.Content))
+	}
+
+	if err != nil {
 		pqErr := err.(*pq.Error)
 		offset, err := strconv.Atoi(pqErr.Position)
 		if err == nil && offset >= 0 {
@@ -141,6 +149,26 @@ func (driver *Driver) Versions() (file.Versions, error) {
 	versions := file.Versions{}
 	err := driver.db.Select(&versions, "SELECT version FROM "+tableName+" ORDER BY version DESC")
 	return versions, err
+}
+
+// fileOptions returns the list of options extracted from the first line of the file content.
+// Format: "-- <option1> <option2> <...>"
+func fileOptions(content []byte) []string {
+	firstLine := strings.Split(string(content), "\n")[0]
+	if !strings.HasPrefix(firstLine, "-- ") {
+		return []string{}
+	}
+	opts := strings.TrimPrefix(firstLine, "-- ")
+	return strings.Split(opts, " ")
+}
+
+func txDisabled(opts []string) bool {
+	for _, v := range opts {
+		if v == txDisabledOption {
+			return true
+		}
+	}
+	return false
 }
 
 func init() {

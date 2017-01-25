@@ -18,6 +18,14 @@ migrate help # for more info
 -url="postgres://user@host:port/database?schema=name" 
 ```
 
-## Authors
+## Disable DDL transactions
 
-* Matthias Kadenbach, https://github.com/gemnasium
+Some queries, like `alter type ... add value` cannot be executed inside a transaction block.
+Since all migrations are executed in a transaction (per migration file), a special option must be specified inside the transaction file:
+
+```sql
+-- disable_ddl_transaction
+alter type ...;
+```
+The option `disable_ddl_transaction` must be in a sql comment of the first line of the migration file.
+If set, the driver will execute the file content directly.

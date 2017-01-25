@@ -4,6 +4,7 @@
 
 - [postgresql] Avoid DDL when checking for versions table (#23)
 - [postgresql] Start switching to sqlx to write cleaner code
+- [postgresql] Transactions can be disabled per migration file
 
 ## v1.4.1 - 2016-12-16
 
