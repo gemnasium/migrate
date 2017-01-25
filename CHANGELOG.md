@@ -1,5 +1,10 @@
 # Migrate Changelog
 
+## master
+
+- [postgresql] Avoid DDL when checking for versions table (#23)
+- [postgresql] Start switching to sqlx to write cleaner code
+
 ## v1.4.1 - 2016-12-16
 
 * [cassandra] Add [disable_init_host_lookup](https://github.com/gocql/gocql/blob/master/cluster.go#L92) url param (@GeorgeMac / #17)

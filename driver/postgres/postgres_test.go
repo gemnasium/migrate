@@ -45,6 +45,11 @@ func migrate(t *testing.T, driverUrl string) {
 		t.Fatal(err)
 	}
 
+	// testing idempotency: second call should be a no-op, since table already exists
+	if err := d.Initialize(driverUrl); err != nil {
+		t.Fatal(err)
+	}
+
 	files := []file.File{
 		{
 			Path:      "/foobar",

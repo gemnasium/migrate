@@ -3,24 +3,24 @@ package postgres
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/gemnasium/migrate/driver"
 	"github.com/gemnasium/migrate/file"
 	"github.com/gemnasium/migrate/migrate/direction"
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
 type Driver struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 const tableName = "schema_migrations"
 
 func (driver *Driver) Initialize(url string) error {
-	db, err := sql.Open("postgres", url)
+	db, err := sqlx.Open("postgres", url)
 	if err != nil {
 		return err
 	}
@@ -29,32 +29,39 @@ func (driver *Driver) Initialize(url string) error {
 	}
 	driver.db = db
 
-	if err := driver.ensureVersionTableExists(); err != nil {
-		return err
-	}
-	return nil
+	return driver.ensureVersionTableExists()
+}
+
+func (driver *Driver) SetDB(db *sql.DB) {
+	driver.db = sqlx.NewDb(db, "postgres")
 }
 
 func (driver *Driver) Close() error {
-	if err := driver.db.Close(); err != nil {
-		return err
-	}
-	return nil
+	return driver.db.Close()
 }
 
 func (driver *Driver) ensureVersionTableExists() error {
-	if _, err := driver.db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (version bigint not null primary key);"); err != nil {
+	// avoid DDL statements if possible for BDR (see #23)
+	var c int
+	driver.db.Get(&c, "SELECT count(*) FROM information_schema.tables WHERE table_name = $1;", tableName)
+	if c > 0 {
+		// table schema_migrations already exists, check if the schema is correct, ie: version is a bigint
+
+		var dataType string
+		err := driver.db.Get(&dataType, "SELECT data_type FROM information_schema.columns where table_name = $1 and column_name = 'version'", tableName)
+		if err != nil {
+			return err
+		}
+
+		if dataType == "bigint" {
+			return nil
+		}
+
+		_, err = driver.db.Exec("ALTER TABLE " + tableName + " ALTER COLUMN version TYPE bigint USING version::bigint")
 		return err
 	}
-	r := driver.db.QueryRow("SELECT data_type FROM information_schema.columns where table_name = $1 and column_name = 'version'", tableName)
-	dataType := ""
-	if err := r.Scan(&dataType); err != nil {
-		return err
-	}
-	if dataType != "integer" {
-		return nil
-	}
-	_, err := driver.db.Exec("ALTER TABLE " + tableName + " ALTER COLUMN version TYPE bigint")
+
+	_, err := driver.db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (version bigint not null primary key);")
 	return err
 }
 
@@ -101,9 +108,9 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 		if err == nil && offset >= 0 {
 			lineNo, columnNo := file.LineColumnFromOffset(f.Content, offset-1)
 			errorPart := file.LinesBeforeAndAfter(f.Content, lineNo, 5, 5, true)
-			pipe <- errors.New(fmt.Sprintf("%s %v: %s in line %v, column %v:\n\n%s", pqErr.Severity, pqErr.Code, pqErr.Message, lineNo, columnNo, string(errorPart)))
+			pipe <- fmt.Errorf("%s %v: %s in line %v, column %v:\n\n%s", pqErr.Severity, pqErr.Code, pqErr.Message, lineNo, columnNo, string(errorPart))
 		} else {
-			pipe <- errors.New(fmt.Sprintf("%s %v: %s", pqErr.Severity, pqErr.Code, pqErr.Message))
+			pipe <- fmt.Errorf("%s %v: %s", pqErr.Severity, pqErr.Code, pqErr.Message)
 		}
 
 		if err := tx.Rollback(); err != nil {
@@ -121,35 +128,18 @@ func (driver *Driver) Migrate(f file.File, pipe chan interface{}) {
 // Version returns the current migration version.
 func (driver *Driver) Version() (file.Version, error) {
 	var version file.Version
-	err := driver.db.QueryRow("SELECT version FROM " + tableName + " ORDER BY version DESC LIMIT 1").Scan(&version)
-	switch {
-	case err == sql.ErrNoRows:
-		return 0, nil
-	case err != nil:
-		return 0, err
-	default:
+	err := driver.db.Get(&version, "SELECT version FROM "+tableName+" ORDER BY version DESC LIMIT 1")
+	if err == sql.ErrNoRows {
 		return version, nil
 	}
+
+	return version, err
 }
 
 // Versions returns the list of applied migrations.
 func (driver *Driver) Versions() (file.Versions, error) {
 	versions := file.Versions{}
-
-	rows, err := driver.db.Query("SELECT version FROM " + tableName + " ORDER BY version DESC")
-	if err != nil {
-		return versions, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var version file.Version
-		err := rows.Scan(&version)
-		if err != nil {
-			return versions, err
-		}
-		versions = append(versions, version)
-	}
-	err = rows.Err()
+	err := driver.db.Select(&versions, "SELECT version FROM "+tableName+" ORDER BY version DESC")
 	return versions, err
 }
 
