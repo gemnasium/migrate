@@ -1,3 +1,3 @@
 FROM scratch
-ADD migrate /migrate
+ADD migrater /migrate
 ENTRYPOINT ["/migrate"]
