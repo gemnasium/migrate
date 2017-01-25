@@ -21,7 +21,7 @@ migrate help # for more info
 ## Disable DDL transactions
 
 Some queries, like `alter type ... add value` cannot be executed inside a transaction block.
-Since all migrations are executed in a transaction (per migration file), a special option must be specified inside the transaction file:
+Since all migrations are executed in a transaction block by default (per migration file), a special option must be specified inside the migration file:
 
 ```sql
 -- disable_ddl_transaction
