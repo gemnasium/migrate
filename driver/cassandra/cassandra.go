@@ -59,6 +59,23 @@ func (driver *Driver) Initialize(rawurl string) error {
 	if _, ok := u.Query()["disable_init_host_lookup"]; ok {
 		cluster.DisableInitialHostLookup = true
 	}
+	if _, ok := u.Query()["ignore_peer_addr"]; ok {
+		cluster.IgnorePeerAddr = true
+	}
+	if msStr, ok := u.Query()["connect_timeout"]; ok && len(msStr) >= 0 {
+		if i, err := strconv.ParseInt(msStr[0], 10, 64); err == nil {
+			cluster.ConnectTimeout = time.Millisecond * time.Duration(i)
+		} else {
+			return fmt.Errorf("the 'connect_timeout' argument for cassandra must be a numeric number of milliseconds. Error: %v", err)
+		}
+	}
+	if msStr, ok := u.Query()["timeout"]; ok && len(msStr) >= 0 {
+		if i, err := strconv.ParseInt(msStr[0], 10, 64); err == nil {
+			cluster.Timeout = time.Millisecond * time.Duration(i)
+		} else {
+			return fmt.Errorf("the 'timeout' argument for cassandra must be a numeric number of milliseconds. Error: %v", err)
+		}
+	}
 
 	// Check if url user struct is null
 	if u.User != nil {
