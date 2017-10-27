@@ -149,7 +149,6 @@ func TestMigrate(t *testing.T) {
 	if err := d.Close(); err != nil {
 		t.Fatal(err)
 	}
-
 }
 
 func resetKeySpace(session *gocql.Session) error {

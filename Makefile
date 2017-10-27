@@ -1,6 +1,6 @@
 IMAGE=gemnasium/migrate
 DCR=docker-compose run --rm
-.PHONY: clean test build release docker-build docker-push run
+.PHONY: all clean test build release docker-build docker-push
 
 all: release
 

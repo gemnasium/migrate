@@ -72,7 +72,6 @@ func (driver *Driver) Initialize(rawurl string) error {
 			Username: u.User.Username(),
 			Password: password,
 		}
-
 	}
 
 	driver.session, err = cluster.CreateSession()
@@ -80,11 +79,7 @@ func (driver *Driver) Initialize(rawurl string) error {
 		return err
 	}
 
-	if err := driver.ensureVersionTableExists(); err != nil {
-		return err
-	}
-
-	return nil
+	return driver.ensureVersionTableExists()
 }
 
 func (driver *Driver) Close() error {
@@ -168,8 +163,8 @@ func init() {
 	driver.RegisterDriver("cassandra", &Driver{})
 }
 
-// ParseConsistency wraps gocql.ParseConsistency to return an error
-// instead of a panicing.
+// parseConsistency wraps gocql.ParseConsistency to return an error
+// instead of a panicking.
 func parseConsistency(consistencyStr string) (consistency gocql.Consistency, err error) {
 	defer func() {
 		if r := recover(); r != nil {
